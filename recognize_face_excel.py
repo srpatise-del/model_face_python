@@ -7,6 +7,7 @@ import time
 from openpyxl import Workbook, load_workbook
 import os
 import winsound  # 🔊 ใช้สร้างเสียง beep (Windows เท่านั้น)
+from line_bot import send_text #เพิ่มใหม่ !!!!
 
 # ============================
 # 🔥 โหลดโมเดล FaceNet
@@ -128,11 +129,10 @@ while True:
         name = encoder.inverse_transform([pred])[0]
 
         # ============================
-        # 🔥 ถ้าความมั่นใจต่ำ → Unknown
+        # 🔥 ถ้าความมั่นใจต่ำ → Unknown //////////////////////////เพิ่มใหม่
         # ============================
         if confidence < 0.90:
             name = "Unknown"
-
         # ============================
         # 🔥 ระบบเช็คชื่อเข้าเรียน
         # ============================
@@ -147,7 +147,7 @@ while True:
                 now = datetime.now()
                 time_str = now.strftime("%H:%M:%S")
 
-                # บันทึกลง Excel
+                # บันทึกลง Excel /////แก้ใหม่!!!!!!
                 ws.append([name, today_date.strftime("%Y-%m-%d"), time_str])
                 wb.save(excel_file)
 
@@ -155,7 +155,20 @@ while True:
                 checked_today.add(key)
 
                 print(f"[CHECK-IN] {name} at {time_str}")
+                print("Before send_text")
 
+                send_text(
+                    f"""✅ เช็กชื่อสำเร็จ
+
+👤 ชื่อ : {name}
+
+📅 วันที่ : {today_date}
+
+🕒 เวลา : {time_str}
+                """
+                )
+
+                print("After send_text")
                 # ============================
                 # 🔊 เล่นเสียงแจ้งเตือน
                 # ============================

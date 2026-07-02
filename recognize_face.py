@@ -5,6 +5,7 @@ from keras_facenet import FaceNet
 from datetime import datetime
 import time
 import winsound  # 🔊 ใช้ส่งเสียงแจ้งเตือน (เฉพาะ Windows)
+from line_bot import send_text #เพิมใหม่ !!!!
 
 # ==================================================
 # โหลดโมเดล FaceNet สำหรับแปลงใบหน้าเป็น Feature Vector
@@ -128,7 +129,20 @@ while True:
         # ==================================================
         if confidence < 0.90:
             name = "Unknown"
+            if current_time - last_log_time.get("line", 0) > 30:
+                print(">>> SEND LINE <<<")
+                send_text(
+                    f"""🚨 Face Detection Alert
 
+พบบุคคลที่ไม่รู้จัก
+
+Confidence : {confidence:.2f}
+
+Time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+        )
+
+        last_log_time["line"] = current_time
         # ==================================================
         # ส่งเสียงแจ้งเตือนเมื่อพบใบหน้า
         # ==================================================
@@ -148,23 +162,33 @@ while True:
         if name not in last_log_time:
             last_log_time[name] = 0
 
-        if current_time - last_log_time[name] > LOG_INTERVAL:
+if current_time - last_log_time[name] > LOG_INTERVAL:
 
-            # เวลาปัจจุบัน
-            time_now = datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            # เขียนข้อมูลลงไฟล์
-            log_file.write(
-                f"{time_now}, {name}, {confidence:.2f}\n"
-            )
+    log_file.write(
+        f"{time_now}, {name}, {confidence:.2f}\n"
+    )
 
-            # บันทึกลงไฟล์ทันที
-            log_file.flush()
+    log_file.flush()
 
-            # อัปเดตเวลาล่าสุด
-            last_log_time[name] = current_time
+    # ส่งเฉพาะคนที่รู้จัก
+    if name != "Unknown":
+
+        print("Sending LINE...")
+
+        send_text(
+            f"""✅ Face Recognition
+
+👤 {name}
+
+🕒 {time_now}
+
+📈 Confidence : {confidence:.2f}
+"""
+        )
+
+    last_log_time[name] = current_time
 
         # ==================================================
         # วาดกรอบรอบใบหน้า
